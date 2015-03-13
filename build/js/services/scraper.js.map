@@ -1,0 +1,1 @@
+{"version":3,"names":[],"mappings":"","sources":["services/scraper.js"],"sourcesContent":["(function () {\n\n    var scraper = function () {\n\n        return {};\n\n    };\n\n    var module = angular.module(\"scraperify\");\n    module.factory(\"scraper\", scraper);\n\n}());"],"file":"services/scraper.js","sourceRoot":"/source/"}
