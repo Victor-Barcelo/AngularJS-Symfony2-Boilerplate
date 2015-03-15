@@ -134,5 +134,3 @@ gulp.task('browser-sync', function () {
         }
     });
 });
-
-//gulp.task ('watch&bsync',['watch','browser-sync']);

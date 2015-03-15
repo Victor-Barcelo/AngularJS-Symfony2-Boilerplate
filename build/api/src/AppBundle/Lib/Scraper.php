@@ -11,10 +11,10 @@ class Scraper {
     private $langFrom;
     private $langTo;
 
-    public function __construct($langFrom, $langTo, $url, $cssSelector)
+    public function __construct($langFrom, $langTo, $cssSelector, $url)
     {
         $this->client = new Client();
-        $this->url = $url;
+        $this->url = $this->addHttp($url);
         $this->cssSelector = $cssSelector;
         $this->langFrom = $langFrom;
         $this->langTo = $langTo;
@@ -30,5 +30,12 @@ class Scraper {
             }
         );
         return $nodes;
+    }
+
+    public function addHttp($url) {
+        if (!preg_match("~^(?:f|ht)tps?://~i", $url)) {
+            $url = "http://" . $url;
+        }
+        return $url;
     }
 }

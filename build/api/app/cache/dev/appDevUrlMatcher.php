@@ -128,8 +128,8 @@ class appDevUrlMatcher extends Symfony\Bundle\FrameworkBundle\Routing\Redirectab
         }
 
         // getScrapedData
-        if (0 === strpos($pathinfo, '/Ng-ex2/build/api/scrape') && preg_match('#^/Ng\\-ex2/build/api/scrape/(?P<langFrom>[^/]++)/(?P<langTo>[^/]++)/(?P<url>[^/]++)/(?P<cssSelector>[^/]++)$#s', $pathinfo, $matches)) {
-            return $this->mergeDefaults(array_replace($matches, array('_route' => 'getScrapedData')), array (  '_controller' => 'AppBundle\\Controller\\DefaultController::getScrapedDataAction',));
+        if (0 === strpos($pathinfo, '/Ng-ex2/build/api/scrape') && preg_match('#^/Ng\\-ex2/build/api/scrape/(?P<langFrom>[^/]++)/(?P<langTo>[^/]++)/(?P<cssSelector>[^/]++)/(?P<url>[^/]++)$#s', $pathinfo, $matches)) {
+            return $this->mergeDefaults(array_replace($matches, array('_route' => 'getScrapedData')), array (  '_controller' => 'AppBundle\\Controller\\MainController::getScrapedDataAction',));
         }
 
         throw 0 < count($allow) ? new MethodNotAllowedException(array_unique($allow)) : new ResourceNotFoundException();
