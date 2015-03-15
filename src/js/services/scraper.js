@@ -1,8 +1,22 @@
 (function () {
 
-    var scraper = function () {
+    var scraper = function ($http) {
 
-        return {};
+        var getNodes = function (langFrom, langTo, selector, url) {
+            var encodedUrl = 'http://localhost/Ng-ex2/build/api/scrape/' + langFrom + '/' + langTo + '/' + encodeURIComponent(selector) + '/' + encodeURIComponent(encodeURIComponent(prepareUrl(url)));
+            return $http.get(encodedUrl)
+                .then(function (response) {
+                    return response.data.nodes;
+                });
+        }
+
+        var prepareUrl = function (url) {
+            return url.replace(/.*?:\/\//g, "").replace(/\/$/, "");
+        };
+
+        return {
+            getNodes: getNodes
+        };
 
     };
 

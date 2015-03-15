@@ -22,7 +22,7 @@ class MainController extends Controller
         $sc = new Scraper($langFrom, $langTo, $cssSelector, $url);
         $nodes = $sc->getNodes();
 
-        $return = json_encode(array("data" => $nodes));
+        $return = json_encode(array("nodes" => $nodes));
 
 //        $return = json_encode(array("data" => $langFrom . $langTo . $url . $cssSelector));
         return new Response(

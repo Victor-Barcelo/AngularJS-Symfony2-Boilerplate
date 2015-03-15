@@ -2,21 +2,14 @@
 
     var app = angular.module("scraperify");
 
-    var MainController = function ($http) {
+    var MainController = function (scraper) {
         var vm = this;
 
         vm.doClick = function () {
-
-            var encodedUrl = 'http://localhost/Ng-ex2/build/api/scrape/' + vm.selectedLangFrom.name + '/' + vm.selectedLangTo.name + '/' + encodeURIComponent(vm.selector) + '/' + encodeURIComponent(encodeURIComponent(prepareUrl(vm.url)));
-            var responsePromise = $http.get(encodedUrl);
-
-            responsePromise.success(function (data, status, headers, config) {
-                vm.nodes = data.data;
-                //console.log(data);
-            });
-            responsePromise.error(function (data, status, headers, config) {
-                //console.log("AJAX failed!");
-            });
+            scraper.getNodes(vm.selectedLangFrom.name, vm.selectedLangTo.name, vm.selector, vm.url)
+                .then(function (nodes) {
+                    vm.nodes = nodes;
+                });
         };
 
         vm.langFrom = [
@@ -34,15 +27,7 @@
 
         vm.url = 'victorbarcelo.net';
         vm.selector = '.post_title';
-        //vm.url = null;
-        //vm.selector = null;
-
     };
-
-    var prepareUrl = function (url) {
-        return url.replace(/.*?:\/\//g, "").replace(/\/$/, "");
-    };
-
     app.controller("MainController", MainController);
 
 }());
