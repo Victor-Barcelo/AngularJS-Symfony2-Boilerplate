@@ -2,8 +2,9 @@
     <div class="container">
 
         <div class="row">
-            <form role="form">
-                <div class="col-lg-6">
+            <div class="col-lg-6">
+
+                <form role="form">
 
                     <div class="form-group">
                         <label for="InputName">Página web</label>
@@ -54,39 +55,44 @@
                     <input id='scrapBtn' type="submit" value="Scrap!" class="btn btn-lg btn-info pull-right"
                            ng-click="main.doClick()">
 
-                </div>
-            </form>
+                    <div class="clearfix"></div>
+
+                </form>
+
+            </div>
 
             <div class="col-lg-5 col-md-push-1">
-                <div class="col-md-12">
 
-                    <!--<div class="alert alert-success">-->
-                    <!--<strong><span class="glyphicon glyphicon-ok"></span> Success! Message sent.</strong>-->
-                    <!--</div>-->
-                    <!--<div class="alert alert-danger">-->
-                    <!--<span class="glyphicon glyphicon-remove"></span><strong> Error! Please check all page-->
-                    <!--inputs.</strong>-->
-                    <!--</div>-->
-                    <!--</div>-->
+                <div ng-if="main.isAjaxRequesting">
+                    <h3 class="mainFont">Scrapeando...</h3>
+                    <img id="spinner"
+                         ng-src="https://d1ow200m9i3wyh.cloudfront.net/img/assets/common/images/loader.gif">
+                </div>
 
-                    <div ng-show="main.nodes.length > 0">
-                        <h3>Resultados</h3>
-                        <hr>
+                <div ng-if="!main.isAjaxRequesting">
+                    <div ng-if="main.nodes.length === 0">
+                        <div class="alert alert-danger">
+                            <span class="glyphicon glyphicon-remove"></span><strong>No se han obtenido
+                            resultados.</strong>
+                        </div>
+                        <img id="noResultsGif" ng-src="images/noResults.gif" alt=""/>
                     </div>
 
-                    <div>
+                    <div ng-if="main.nodes.length > 0">
+                        <h3 class="mainFont">Resultados</h3>
+                        <hr>
                         <ul class="list-group">
                             <li class="list-group-item" ng-repeat="node in main.nodes track by $index">
                                 <span class="glyphicon glyphicon-triangle-right"></span> {{ node }}
                             </li>
                         </ul>
                     </div>
-
                 </div>
+
             </div>
-
-        <!--row-->
         </div>
-
+        <!--row-->
     </div>
+
+</div>
 </div>

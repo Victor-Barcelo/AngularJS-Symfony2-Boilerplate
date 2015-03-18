@@ -1,4 +1,5 @@
 'use strict';
+
 var browserify = require('browserify'),
     gulp = require('gulp'),
     transform = require('vinyl-transform'),
@@ -16,15 +17,25 @@ var browserify = require('browserify'),
     imagemin = require('gulp-imagemin'),
     size = require('gulp-size'),
     gutil = require('gulp-util'),
-    ftp = require('gulp-ftp'),
     mocha = require('gulp-mocha'),
-    log4js = require('log4js'),
     fs = require('fs'),
     yargs = require('yargs'),
-    browserSync = require('browser-sync');
+    browserSync = require('browser-sync'),
+    ftp = require('vinyl-ftp');
 
-//var config = require('./gulpUserConfig.json');
+var config = require('./gulpUserConfig.json');
 var env = yargs.argv.env || 'dev';
+
+var gulpSSH = require('gulp-ssh')({
+    ignoreErrors: false,
+    sshConfig: {
+        host: config.ssh.host,
+        port: config.ssh.port,
+        username: config.ssh.username,
+        passphrase: config.ssh.passphrase,
+        privateKey: require('fs').readFileSync('/home/vto/.ssh/id_rsa')
+    }
+});
 
 console.log('Enviroment: ' + env);
 
@@ -71,16 +82,6 @@ gulp.task('images:optimize', function () {
         .pipe(size());
 });
 
-gulp.task('ftp', function () {
-    return gulp.src('build/**/*')
-        .pipe(ftp({
-            host: config.ftp.host,
-            user: config.ftp.user,
-            pass: config.ftp.pass
-        }))
-        .pipe(gutil.noop());
-});
-
 gulp.task('run tests', function () {
     return gulp.src('./src/js/test/**/*Test.js')
         .pipe(mocha())
@@ -94,17 +95,15 @@ gulp.task('clean', function (cb) {
     del(['./build/*', '!./build/api'], cb);
 });
 
+//----Misc tasks
 gulp.task('default', ['build:dev']);
 
-gulp.task('build:prod', function () {
-    runSequence('run tests', 'clean',
+gulp.task('build:productionDeploy', function () {
+    runSequence('clean',
         ['html', 'js', 'sass', 'images:optimize'],
-        'ftp'
+        'deploy:run'
     );
 });
-
-
-//----Manual
 
 gulp.task('build:dev', function () {
     runSequence('clean',
@@ -112,10 +111,11 @@ gulp.task('build:dev', function () {
     );
 });
 
-//----Watches
-
+//----Watch & Browsersync
 gulp.task('watch', function () {
     gulp.watch('./src/js/**/*.js', ['js']);
+    gulp.watch('./src/js/*.js', ['js']);
+    gulp.watch('./src/images/*', ['images:optimize']);
     gulp.watch('./src/scss/*.scss', ['sass']);
     gulp.watch(['src/*.html', 'src/views/*.html'], ['html']);
 });
@@ -125,7 +125,8 @@ gulp.task('browser-sync', function () {
         './build/index.html',
         './build/views/*.html',
         './build/js/**/*.js',
-        './build/css/*.css'
+        './build/css/*.css',
+        './src/images/*'
     ];
 
     browserSync.init(files, {
@@ -133,4 +134,75 @@ gulp.task('browser-sync', function () {
             baseDir: './build'
         }
     });
+});
+
+//----Deploy //TODO: Poner en modo prod
+gulp.task('deploy:run', function () {
+    env = 'prod';
+    runSequence('deploy:clean', 'deploy:uploadAll', 'deploy:uploadConfigs', 'deploy:copyConfigs', 'deploy:runComposer');
+});
+
+gulp.task('deploy:clean', function () {
+    return gulpSSH
+        .shell(['cd public_html/test', 'rm -rf *'], {filePath: 'commands.log'})
+        .pipe(gulp.dest('logs'));
+});
+
+gulp.task('deploy:uploadAll', function () {
+
+    var conn = ftp.create({
+        host: config.ftp.host,
+        user: config.ftp.user,
+        password: config.ftp.pass,
+        parallel: 1,
+        log: gutil.log
+    });
+
+    var globs = [
+        'build/**/*',
+        '!build/api/app/logs/**/*',
+        '!build/api/bin/**/*',
+        '!build/api/app/cache/**/*',
+        '!build/api/vendor/**/*',
+        '!build/api/web/bundles/**/*',
+        '!build/api/app/config/routing.yml',
+        '!build/js/constants.js'
+    ];
+
+    return gulp.src(globs, {base: './build', buffer: false})
+        .pipe(conn.newer('/')) // only upload newer files
+        .pipe(conn.dest('/'));
+});
+
+gulp.task('deploy:uploadConfigs', function () {
+
+    var conn = ftp.create({
+        host: config.ftp.host,
+        user: config.ftp.user,
+        password: config.ftp.pass,
+        parallel: 1,
+        log: gutil.log
+    });
+
+    var globs = [
+        'deployConfigs/routing.yml',
+        'deployConfigs/constants.js',
+        'deployConfigs/.htaccess'
+    ];
+
+    return gulp.src(globs, {base: './deploy_configs', buffer: false})
+        .pipe(conn.newer('/')) // only upload newer files
+        .pipe(conn.dest('/deployConfigs'));
+});
+
+gulp.task('deploy:copyConfigs', function () {
+    return gulpSSH
+        .shell(['cd public_html/test', 'cp deployConfigs/constants.js js/', 'cp deployConfigs/routing.yml api/app/config/', 'cp deployConfigs/.htaccess api/'], {filePath: 'commands.log'})
+        .pipe(gulp.dest('logs'));
+});
+
+gulp.task('deploy:runComposer', function () {
+    return gulpSSH
+        .shell(['cd public_html/test', 'export SYMFONY_ENV=prod', 'cd api', 'php composer.phar install --no-dev --optimize-autoloader', 'php app/console cache:clear --env=prod --no-debug'], {filePath: 'commands.log'})
+        .pipe(gulp.dest('logs'));
 });

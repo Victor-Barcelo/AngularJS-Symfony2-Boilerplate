@@ -2,14 +2,17 @@
 
     var app = angular.module("scraperify");
 
-    var MainController = function (scraper) {
+    var MainController = function (scraper, appConfig) {
         var vm = this;
 
         vm.doClick = function () {
-            scraper.getNodes(vm.selectedLangFrom.name, vm.selectedLangTo.name, vm.selector, vm.url)
-                .then(function (nodes) {
-                    vm.nodes = nodes;
-                });
+            vm.isAjaxRequesting = true;
+            var baseUrl = appConfig.baseUrl;
+                scraper.getNodes(baseUrl, vm.selectedLangFrom.name, vm.selectedLangTo.name, vm.selector, vm.url)
+                    .then(function (nodes) {
+                        vm.nodes = nodes;
+                        vm.isAjaxRequesting = false;
+                    });
         };
 
         vm.langFrom = [
