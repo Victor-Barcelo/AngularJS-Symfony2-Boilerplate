@@ -39,21 +39,11 @@ var gulpSSH = require('gulp-ssh')({
 
 console.log('Enviroment: ' + env);
 
-gulp.task('js:browserify', function () {
-    var browserified = transform(function (filename) {
-        var b = browserify(filename);
-        return b.bundle();
-    });
-    return gulp.src('./src/js/*.js')
-        .pipe(browserified)
-        .pipe(gulpif(env === 'dev', sourcemaps.init({loadMaps: true})))
-        .pipe(gulpif(env === 'dev', sourcemaps.write('./')))
-        .pipe(gulpif(env === 'prod', uglify()))
-        .pipe(gulp.dest('./build/js'));
-});
+gulp.task('default', ['build:dev']);
 
+//---- Assorted
 gulp.task('js', function () {
-    return gulp.src(['./src/js/*.js', './src/js/controllers/*.js', './src/js/services/*.js'], {base: './src/js'})
+    return gulp.src(['./src/js/**/*.js'], {base: './src/js'})
         .pipe(gulpif(env === 'dev', sourcemaps.init({loadMaps: true})))
         .pipe(gulpif(env === 'dev', sourcemaps.write('./')))
         .pipe(gulpif(env === 'prod', uglify()))
@@ -74,7 +64,7 @@ gulp.task('sass', function () {
         .pipe(gulp.dest('./build/css'));
 });
 
-gulp.task('images:optimize', function () {
+gulp.task('images', function () {
     return gulp.src('./src/images/**/*.{jpg,jpeg,png,gif}')
         .pipe(changed('./build/images'))
         .pipe(imagemin())
@@ -82,40 +72,14 @@ gulp.task('images:optimize', function () {
         .pipe(size());
 });
 
-gulp.task('run tests', function () {
-    return gulp.src('./src/js/test/**/*Test.js')
-        .pipe(mocha())
-        .on('error', function (err) {
-            console.log(err);
-            process.emit('exit');
-        });
-});
-
 gulp.task('clean', function (cb) {
     del(['./build/*', '!./build/api'], cb);
 });
 
-//----Misc tasks
-gulp.task('default', ['build:dev']);
-
-gulp.task('build:productionDeploy', function () {
-    runSequence('clean',
-        ['html', 'js', 'sass', 'images:optimize'],
-        'deploy:run'
-    );
-});
-
-gulp.task('build:dev', function () {
-    runSequence('clean',
-        ['html', 'js', 'sass', 'images:optimize']
-    );
-});
-
-//----Watch & Browsersync
+//---- Watch & Browsersync
 gulp.task('watch', function () {
     gulp.watch('./src/js/**/*.js', ['js']);
-    gulp.watch('./src/js/*.js', ['js']);
-    gulp.watch('./src/images/*', ['images:optimize']);
+    gulp.watch('./src/images/*', ['images']);
     gulp.watch('./src/scss/*.scss', ['sass']);
     gulp.watch(['src/*.html', 'src/views/*.html'], ['html']);
 });
@@ -136,10 +100,25 @@ gulp.task('browser-sync', function () {
     });
 });
 
-//----Deploy //TODO: Poner en modo prod
+//---- Build
+gulp.task('build:dev', function () {
+    env = 'dev';
+    runSequence('clean',
+        ['html', 'js', 'sass', 'images']
+    );
+});
+
+gulp.task('build:prod', function () {
+    env = 'prod';
+    runSequence('clean',
+        ['html', 'js', 'sass', 'images']
+    );
+});
+
+//----Deploy
 gulp.task('deploy:run', function () {
     env = 'prod';
-    runSequence('deploy:clean', 'deploy:uploadAll', 'deploy:uploadConfigs', 'deploy:copyConfigs', 'deploy:runComposer');
+    runSequence('build:prod', 'deploy:clean', 'deploy:uploadAll', 'deploy:uploadConfigs', 'deploy:copyConfigs', 'deploy:runComposer');
 });
 
 gulp.task('deploy:clean', function () {
@@ -149,7 +128,6 @@ gulp.task('deploy:clean', function () {
 });
 
 gulp.task('deploy:uploadAll', function () {
-
     var conn = ftp.create({
         host: config.ftp.host,
         user: config.ftp.user,
@@ -175,7 +153,6 @@ gulp.task('deploy:uploadAll', function () {
 });
 
 gulp.task('deploy:uploadConfigs', function () {
-
     var conn = ftp.create({
         host: config.ftp.host,
         user: config.ftp.user,
@@ -198,11 +175,11 @@ gulp.task('deploy:uploadConfigs', function () {
 gulp.task('deploy:copyConfigs', function () {
     return gulpSSH
         .shell(['cd public_html/test', 'cp deployConfigs/constants.js js/', 'cp deployConfigs/routing.yml api/app/config/', 'cp deployConfigs/.htaccess api/'], {filePath: 'commands.log'})
-        .pipe(gulp.dest('logs'));
+        .pipe(concat('logs'));
 });
 
 gulp.task('deploy:runComposer', function () {
     return gulpSSH
         .shell(['cd public_html/test', 'export SYMFONY_ENV=prod', 'cd api', 'php composer.phar install --no-dev --optimize-autoloader', 'php app/console cache:clear --env=prod --no-debug'], {filePath: 'commands.log'})
-        .pipe(gulp.dest('logs'));
+        .pipe(concat('logs'));
 });

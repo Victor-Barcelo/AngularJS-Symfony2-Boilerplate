@@ -1,1 +1,0 @@
-{"version":3,"names":[],"mappings":"","sources":["constants.js"],"sourcesContent":["'use strict';\n\nvar appConfig = {\n    baseUrl: 'http://localhost/Ng-ex2/build/api/scrape/'\n};"],"file":"constants.js","sourceRoot":"/source/"}

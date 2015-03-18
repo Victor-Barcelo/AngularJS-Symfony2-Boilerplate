@@ -1,16 +1,1 @@
-(function () {
-
-    var app = angular.module("scraperify", ["ngRoute"]);
-    app.constant('appConfig', appConfig);
-
-    app.config(function ($routeProvider) {
-        $routeProvider
-            .when("/main", {
-                templateUrl: "views/main.html",
-                controller: "MainController as main"
-            })
-            .otherwise({redirectTo: "/main"});
-    });
-
-}());
-//# sourceMappingURL=app.js.map
+!function(){var n=angular.module("scraperify",["ngRoute"]);n.constant("appConfig",appConfig),n.config(function(n){n.when("/main",{templateUrl:"views/main.html",controller:"MainController as main"}).otherwise({redirectTo:"/main"})})}();
