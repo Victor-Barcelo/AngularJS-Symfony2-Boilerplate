@@ -1,4 +1,0 @@
-victorba@server19 [~]# cd public_html/test
-victorba@server19 [~/public_html/test]# rm -rf *
-victorba@server19 [~/public_html/test]# exit
-logout
