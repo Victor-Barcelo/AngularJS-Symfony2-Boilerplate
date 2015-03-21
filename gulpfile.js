@@ -124,7 +124,7 @@ gulp.task('deploy:run', function () {
 
 gulp.task('deploy:clean', function () {
     return gulpSSH
-        .shell(['cd public_html/test', 'rm -rf *'])
+        .shell(['cd public_html/scrap', 'rm -rf *'])//TODO: Conf directory
         .pipe(gutil.noop());
 });
 
@@ -175,12 +175,12 @@ gulp.task('deploy:uploadConfigs', function () {
 
 gulp.task('deploy:copyConfigs', function () {
     return gulpSSH
-        .shell(['cd public_html/test', 'cp deployConfigs/constants.js js/', 'cp deployConfigs/routing.yml api/app/config/', 'cp deployConfigs/.htaccess api/'], {filePath: 'commands.log'})
+        .shell(['cd public_html/scrap', 'cp deployConfigs/constants.js js/', 'cp deployConfigs/routing.yml api/app/config/', 'cp deployConfigs/.htaccess api/'])
         .pipe(gutil.noop());
 });
 
 gulp.task('deploy:runComposer', function () {
     return gulpSSH
-        .shell(['cd public_html/test', 'export SYMFONY_ENV=prod', 'cd api', 'php composer.phar install --no-dev --optimize-autoloader', 'php app/console cache:clear --env=prod --no-debug'], {filePath: 'commands.log'})
+        .shell(['cd public_html/scrap', 'export SYMFONY_ENV=prod', 'cd api', 'php composer.phar install --no-dev --optimize-autoloader', 'php app/console cache:clear --env=prod --no-debug'])
         .pipe(gutil.noop());
 });
